@@ -1,3 +1,5 @@
+;;;                     -*- lexical-binding: t; -*-
+;;
 ;;; optcheck --- A flycheck extension to report optimisation success/failure.
 ;;
 ;;  Copyright (C) 2022  Paul Bartholomew
@@ -21,17 +23,29 @@
 
 (require 'flycheck)
 
-(flycheck-define-checker c/c++-gcc-opt
-  "A C/C++ missed optimisation reporter using GCC.
+(flycheck-def-option-var flycheck-gcc-vectorize t c/c++-gcc
+  "Whether to enable auto-vectorization in GCC.
 
-Requires GCC 4.4 or newer.  See URL `https://gcc.gnu.org/'."
+When non-nil, enable auto-vectorization for optimisation checker, via
+`-ftree-vectorize'."
+  :type 'boolean
+  :safe #'booleanp
+  :package-version '(flycheck . "0.21"))
+
+(flycheck-define-checker c/c++-gcc-opt
+  "Reports missed optimisations in C/C++ code using GCC.
+
+This reporter is based on the c/c++-gcc syntax checker from flycheck."
   :command ("gcc"
+	    ;; Request GCC to report all missed optimisations
 	    "-fopt-info-missed-optall"
+	    "-O2" ;; Nothing seems to be reported below -O2
             "-fshow-column"
             "-iquote" (eval (flycheck-c/c++-quoted-include-directory))
             (option "-std=" flycheck-gcc-language-standard concat)
             (option-flag "-fno-exceptions" flycheck-gcc-no-exceptions)
             (option-flag "-fno-rtti" flycheck-gcc-no-rtti)
+	    (option-flag "-ftree-vectorize" flycheck-gcc-vectorize)
             (option-flag "-fopenmp" flycheck-gcc-openmp)
             (option-list "-include" flycheck-gcc-includes)
             (option-list "-W" flycheck-gcc-warnings concat)
@@ -52,8 +66,7 @@ Requires GCC 4.4 or newer.  See URL `https://gcc.gnu.org/'."
   :error-patterns ((info line-start (or "<stdin>" (file-name))
 			 ":" line (optional ":" column)
 			 ": missed: " (message) line-end))
-  :modes (c-mode c++-mode)
-  :next-checkers ((warning . c/c++-cppcheck)))
+  :modes (c-mode c++-mode))
 
 (provide 'optcheck)
 
