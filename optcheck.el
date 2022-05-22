@@ -106,6 +106,17 @@ Uses GCC's Fortran compiler gfortran.  See URL
 			 ":" line (optional ":" column)
 			 ": missed: " (message) line-end))
   :modes (fortran-mode f90-mode))
+
+;; Register the optimisation reporter.
+(setq flycheck-checkers (append flycheck-checkers
+				'(c/c++-gcc-opt
+				  fortran-gfortran-opt)))
+
+;; Perform optimisation report AFTER running syntax checkers.
+;; The APPEND attribute is set TRUE to ensure any additional checkers
+;; already specified are run.
+(flycheck-add-next-checker 'c/c++-gcc-opt '(warning . c/c++-gcc) t)
+(flycheck-add-next-checker 'fortran-gfortran-opt '(warning . fortran-gfortran) t)
 (provide 'optcheck)
 
 ;;; optcheck.el ends here
