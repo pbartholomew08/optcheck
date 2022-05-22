@@ -112,7 +112,22 @@ Uses GCC's Fortran compiler gfortran.  See URL
   :error-patterns ((info line-start (or "<stdin>" (file-name))
 			 ":" line (optional ":" column)
 			 ": missed: " (message) line-end))
+  :error-filter optcheck/gnu-filter
   :modes (fortran-mode f90-mode))
+
+(defun optcheck/gnu-filter (missed-opts)
+  "Filter `MISSED-OPTS' to reduce noise in GNU missed optimisation reports.
+
+For example, many missed optimisation reports will flood the output with
+'statement clobbers memory' to the extent it is useless, this function will
+filter out messages in `MISSED-OPTS' to reduce this noise."
+  (flycheck-sanitize-errors
+  (seq-remove
+      (lambda (err)
+	(-when-let (msg (flycheck-error-message err))
+	  (or (string-match-p "statement clobbers memory" msg)
+	      (string-match-p "function body not available" msg))))
+      missed-opts)))
 
 ;; Register the optimisation reporter.
 (setq flycheck-checkers (append flycheck-checkers
