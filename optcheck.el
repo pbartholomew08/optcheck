@@ -32,6 +32,15 @@ When non-nil, enable auto-vectorization for optimisation checker, via
   :safe #'booleanp
   :package-version '(flycheck . "0.21"))
 
+(flycheck-def-option-var flycheck-gfortran-vectorize t fortran-gfortran-opt
+  "Whether to enable auto-vectorization in gfortran.
+
+When non-nil, enable auto-vectorization for optimisation checker, via
+`-ftree-vectorize'."
+  :type 'boolean
+  :safe #'booleanp
+  :package-version '(flycheck . "0.21"))
+
 (flycheck-define-checker c/c++-gcc-opt
   "Reports missed optimisations in C/C++ code using GCC.
 
@@ -68,6 +77,35 @@ This reporter is based on the c/c++-gcc syntax checker from flycheck."
 			 ": missed: " (message) line-end))
   :modes (c-mode c++-mode))
 
+(flycheck-define-checker fortran-gfortran-opt
+  "Reports missed optimisations in Fortran code using gfortran.
+
+Uses GCC's Fortran compiler gfortran.  See URL
+`https://gcc.gnu.org/onlinedocs/gfortran/'."
+  :command ("gfortran"
+	    ;; Request GCC to report all missed optimisations
+	    "-fopt-info-missed-optall"
+	    "-O2" ;; Nothing seems to be reported below -O2
+            "-fsyntax-only"
+            "-fshow-column"
+            ;; Do not visually indicate the source location
+            "-fno-diagnostics-show-caret"
+            ;; Do not show the corresponding warning group
+            "-fno-diagnostics-show-option"
+            ;; Fortran has similar include processing as C/C++
+            "-iquote" (eval (flycheck-c/c++-quoted-include-directory))
+            (option "-std=" flycheck-gfortran-language-standard concat)
+            (option "-f" flycheck-gfortran-layout concat
+                    flycheck-option-gfortran-layout)
+	    (option-flag "-ftree-vectorize" flycheck-gfortrn-vectorize)
+            (option-list "-W" flycheck-gfortran-warnings concat)
+            (option-list "-I" flycheck-gfortran-include-path concat)
+            (eval flycheck-gfortran-args)
+            source)
+  :error-patterns ((info line-start (or "<stdin>" (file-name))
+			 ":" line (optional ":" column)
+			 ": missed: " (message) line-end))
+  :modes (fortran-mode f90-mode))
 (provide 'optcheck)
 
 ;;; optcheck.el ends here
