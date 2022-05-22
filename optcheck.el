@@ -122,8 +122,8 @@ Uses GCC's Fortran compiler gfortran.  See URL
 ;; Perform optimisation report AFTER running syntax checkers.
 ;; The APPEND attribute is set TRUE to ensure any additional checkers
 ;; already specified are run.
-(flycheck-add-next-checker 'c/c++-gcc-opt '(warning . c/c++-gcc) t)
-(flycheck-add-next-checker 'fortran-gfortran-opt '(warning . fortran-gfortran) t)
+(flycheck-add-next-checker 'c/c++-gcc '(warning . c/c++-gcc-opt) t)
+(flycheck-add-next-checker 'fortran-gfortran '(warning . fortran-gfortran-opt) t)
 (provide 'optcheck)
 
 ;;; optcheck.el ends here
