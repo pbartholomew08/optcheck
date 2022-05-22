@@ -71,8 +71,9 @@ This reporter is based on the c/c++-gcc syntax checker from flycheck."
                   (pcase major-mode
                     (`c++-mode "c++")
                     (`c-mode "c")))
-            ;; GCC performs full checking only when actually compiling, so `-fsyntax-only' is not enough. Just let it
-            ;; generate assembly code.
+            ;; GCC performs full checking only when actually compiling, so
+            ;; `-fsyntax-only' is not enough. Just let it generate assembly
+            ;; code.
             "-S" "-o" null-device
             ;; Read from standard input
             "-")
@@ -99,13 +100,15 @@ Uses GCC's Fortran compiler gfortran.  See URL
             ;; Fortran has similar include processing as C/C++
             "-iquote" (eval (flycheck-c/c++-quoted-include-directory))
             (option "-std=" flycheck-gfortran-language-standard concat)
-            (option "-f" flycheck-gfortran-layout concat flycheck-option-gfortran-layout)
+            (option "-f" flycheck-gfortran-layout concat
+            flycheck-option-gfortran-layout)
 	    (option-flag "-ftree-vectorize" flycheck-gfortran-vectorize)
             (option-list "-W" flycheck-gfortran-warnings concat)
             (option-list "-I" flycheck-gfortran-include-path concat)
             (eval flycheck-gfortran-args)
-            ;; Optimisation is only attempted when actually compiling, so `-fsyntax-only' is not enough. Just let it
-            ;; generate assembly code.
+            ;; Optimisation is only attempted when actually compiling, so
+            ;; `-fsyntax-only' is not enough. Just let it generate assembly
+            ;; code.
 	    "-S" "-o" null-device
 	    ;; Specify the input
 	    source)
@@ -138,7 +141,9 @@ filter out messages in `MISSED-OPTS' to reduce this noise."
 ;; The APPEND attribute is set TRUE to ensure any additional checkers
 ;; already specified are run.
 (flycheck-add-next-checker 'c/c++-gcc '(warning . c/c++-gcc-opt) t)
-(flycheck-add-next-checker 'fortran-gfortran '(warning . fortran-gfortran-opt) t)
+(flycheck-add-next-checker 'fortran-gfortran
+			   '(warning . fortran-gfortran-opt)
+			   t)
 (provide 'optcheck)
 
 ;;; optcheck.el ends here
