@@ -112,6 +112,12 @@ Uses GCC's Fortran compiler gfortran.  See URL
   :error-patterns ((info line-start (or "<stdin>" (file-name))
 			 ":" line (optional ":" column)
 			 ": missed: " (message) line-end))
+  :error-filter (lambda (errors)
+		  (seq-remove
+		   (lambda (err)
+		     (-when-let (msg (flycheck-error-message err))
+		       (string-match-p "statement clobbers memory" msg)))
+		   errors))
   :modes (fortran-mode f90-mode))
 
 ;; Register the optimisation reporter.
