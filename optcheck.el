@@ -83,6 +83,58 @@ This reporter is based on the c/c++-gcc syntax checker from flycheck."
 			 ": missed: " (message) line-end))
   :modes (c-mode c++-mode))
 
+(flycheck-define-checker c/c++-clang-opt
+  "Reports missed optimisations in C/C++ code using Clang.
+
+This reporter is based on the c/c++-clang syntex checker from flycheck."
+  :command ("clang"
+            "-fsyntax-only"
+            "-fno-color-diagnostics"    ; Do not include color codes in output
+            "-fno-caret-diagnostics"    ; Do not visually indicate the source
+                                        ; location
+            "-fno-diagnostics-show-option" ; Do not show the corresponding
+                                        ; warning group
+            "-iquote" (eval (flycheck-c/c++-quoted-include-directory))
+            (option "-std=" flycheck-clang-language-standard concat)
+            (option-flag "-pedantic" flycheck-clang-pedantic)
+            (option-flag "-pedantic-errors" flycheck-clang-pedantic-errors)
+            (option "-stdlib=" flycheck-clang-standard-library concat)
+            (option-flag "-fms-extensions" flycheck-clang-ms-extensions)
+            (option-flag "-fno-exceptions" flycheck-clang-no-exceptions)
+            (option-flag "-fno-rtti" flycheck-clang-no-rtti)
+            (option-flag "-fblocks" flycheck-clang-blocks)
+            (option-list "-include" flycheck-clang-includes)
+            (option-list "-W" flycheck-clang-warnings concat)
+            (option-list "-D" flycheck-clang-definitions concat)
+            (option-list "-I" flycheck-clang-include-path)
+            (eval flycheck-clang-args)
+            "-x" (eval
+                  (pcase major-mode
+                    (`c++-mode "c++")
+                    (`c-mode "c")))
+            ;; Read from standard input
+            "-")
+  :standard-input t
+  :error-patterns
+  ((info line-start (or "<stdin>" (file-name)) ":" line ":" column
+         ": note: " (optional (message)) line-end)
+   (warning line-start (or "<stdin>" (file-name)) ":" line ":" column
+            ": warning: " (optional (message)) line-end)
+   (error line-start (or "<stdin>" (file-name)) ":" line ":" column
+          ": " (or "fatal error" "error") ": " (optional (message)) line-end))
+  :error-filter
+  (lambda (errors)
+    (let ((errors (flycheck-sanitize-errors errors)))
+      (dolist (err errors)
+        ;; Clang will output empty messages for #error/#warning pragmas without
+        ;; messages.  We fill these empty errors with a dummy message to get
+        ;; them past our error filtering
+        (setf (flycheck-error-message err)
+              (or (flycheck-error-message err) "no message")))
+      errors))
+  :modes (c-mode c++-mode)
+  :next-checkers ((warning . c/c++-cppcheck)))
+
 (flycheck-define-checker fortran-gfortran-opt
   "Reports missed optimisations in Fortran code using gfortran.
 
